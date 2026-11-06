@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlayScope | Football Performance Intelligence Lab</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@500;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="league-default">
+
+  <!-- Interactive 3D Field Particle Canvas -->
+  <canvas id="bgCanvas"></canvas>
+  <div class="canvas-vignette"></div>
+
+  <!-- Top Sticky Navigation Bar -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <div class="brand-logo" onclick="showView('landing')">
+        <span class="brand-pill"></span>
+        <span class="brand-name">Play<span>Scope</span></span>
+        <span class="brand-badge">PRO LAB</span>
+      </div>
+    </div>
+
+    <!-- Smart Omnibox Search -->
+    <div class="search-container">
+      <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="matchSearchInput" placeholder="Search fixtures (e.g. Al Hilal, Al Ahli, SPL)..." autocomplete="off">
+        <span class="search-shortcut">⌘K</span>
+      </div>
+      <div class="search-suggestions" id="searchSuggestions">
+        <div class="suggestion-header" data-i18n="search_hint">AVAILABLE FIXTURES & QUICK SEARCH</div>
+        <div class="suggestion-items" id="suggestionItems"></div>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <!-- SPL Arabic/English Toggle Button -->
+      <div class="lang-switcher" id="langSwitcher" style="display: none;">
+        <button class="lang-btn active" id="btnEn" onclick="switchLanguage('en')">EN</button>
+        <button class="lang-btn" id="btnAr" onclick="switchLanguage('ar')">العربية</button>
+      </div>
+      <a href="#contact" class="nav-cta-btn" data-i18n="contact_nav">Get In Touch</a>
+    </div>
+  </header>
+
+  <!-- VIEW 1: HERO & MAIN LEAGUE CARDS -->
+  <main id="landingView" class="active-view">
+    <section class="hero-section">
+      <div class="hero-pill">
+        <span class="live-dot"></span> <span data-i18n="hero_pill">PERFORMANCE LAB & MATCH INTELLIGENCE</span>
+      </div>
+      <h1 class="hero-title" data-i18n="hero_title">Modern Football Performance Intelligence</h1>
+      <p class="hero-subtitle" data-i18n="hero_sub">Interactive spatial shot maps, xT momentum modeling, and scouting debriefs engineered for professional clubs and performance analysts.</p>
+      
+      <!-- Leadership Attribution -->
+      <div class="founders-chip">
+        <span class="chip-label" data-i18n="leadership">ENGINEERED BY</span>
+        <span class="chip-item"><strong>Salman</strong> (Founder & Lead Architect)</span>
+        <span class="chip-sep">•</span>
+        <span class="chip-item"><strong>Vasudev</strong> (Co-Founder & CEO)</span>
+      </div>
+    </section>
+
+    <!-- 3 Core League Selector Cards (Clean SPL & ISL Badges) -->
+    <section class="leagues-container">
+      <!-- SPL Card -->
+      <div class="league-card spl-card" onclick="openLeague('SPL')">
+        <div class="card-glow"></div>
+        <div class="card-badge">SAUDI ARABIA • TOP TIER</div>
+        <div class="card-content">
+          <div class="league-big-badge spl-color">SPL</div>
+          <h3>Roshn Saudi League</h3>
+          <p>Al-Hilal, Al-Ahli, Al-Nassr tactical intelligence, shot-density maps, and xT flow tracking.</p>
+          <div class="card-action">
+            <span data-i18n="explore_btn">Launch SPL Lab</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ISL Card -->
+      <div class="league-card isl-card" onclick="openLeague('ISL')">
+        <div class="card-glow"></div>
+        <div class="card-badge">INDIA • TOP FLIGHT</div>
+        <div class="card-content">
+          <div class="league-big-badge isl-color">ISL</div>
+          <h3>Indian Super League</h3>
+          <p>Kerala Blasters, Mohun Bagan deep tactical breakdowns, high-press zones, and player xG flow.</p>
+          <div class="card-action">
+            <span data-i18n="explore_btn">Launch ISL Lab</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Others Card -->
+      <div class="league-card other-card" onclick="openLeague('OTHERS')">
+        <div class="card-glow"></div>
+        <div class="card-badge">CONTINENTAL & GLOBAL</div>
+        <div class="card-content">
+          <div class="league-big-badge global-color">GLOBAL</div>
+          <h3>Other Leagues & Tournaments</h3>
+          <p>AFC Champions League Elite, UEFA Champions League, and international event modeling.</p>
+          <div class="card-action">
+            <span data-i18n="explore_btn">Launch Global Lab</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- VIEW 2: LEAGUE MATCH FIXTURES LIST -->
+  <section id="leagueView" class="view-panel" style="display: none;">
+    <div class="league-header">
+      <button class="back-btn" onclick="showView('landing')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span data-i18n="back_home">Back to Hub</span>
+      </button>
+      <div class="league-banner-text">
+        <h2 id="leagueViewTitle">Roshn Saudi League</h2>
+        <p id="leagueViewSub">Select a fixture to launch tactical intelligence & spatial map</p>
+      </div>
+    </div>
+    <div class="match-grid" id="leagueMatchGrid"></div>
+  </section>
+
+  <!-- VIEW 3: MATCH LAB (PRO ANALYST DASHBOARD) -->
+  <section id="matchLabView" class="view-panel" style="display: none;">
+    <div class="lab-header">
+      <button class="back-btn" onclick="returnToLeague()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span data-i18n="back_fixtures">Back to Fixtures</span>
+      </button>
+      
+      <!-- Pro Match Banner with Real Logos and Metadata -->
+      <div class="scoreboard-banner" id="matchScoreboard"></div>
+    </div>
+
+    <!-- Quick xG & Dominance Banner -->
+    <div class="match-overview-strip" id="matchOverviewStrip"></div>
+
+    <!-- Analytics Top Grid -->
+    <div class="analytics-grid">
+      <!-- Left: Interactive Spatial Shot Map with Pro Filter Badges -->
+      <div class="panel-card pitch-card">
+        <div class="card-head">
+          <div>
+            <h3 data-i18n="shot_explorer">Spatial Shot Explorer</h3>
+            <p class="sub-muted" data-i18n="shot_sub">Click any shot marker to inspect complete player and goal-mouth telemetry</p>
+          </div>
+          <!-- Complete Pro Filters: All, Goals, On Target, Blocked, Missed -->
+          <div class="shot-filters">
+            <button class="filter-pill active" onclick="filterShots('all')">All</button>
+            <button class="filter-pill filter-goal" onclick="filterShots('Goal')">Goals</button>
+            <button class="filter-pill filter-target" onclick="filterShots('target')">On Target</button>
+            <button class="filter-pill filter-blocked" onclick="filterShots('blocked')">Blocked</button>
+            <button class="filter-pill filter-miss" onclick="filterShots('miss')">Missed</button>
+          </div>
+        </div>
+
+        <div class="pitch-container" id="pitchContainer">
+          <svg id="footballPitch" viewBox="0 0 105 68">
+            <rect x="0" y="0" width="105" height="68" class="pitch-grass"/>
+            <rect x="2" y="2" width="101" height="64" class="pitch-line outer-border"/>
+            <line x1="52.5" y1="2" x2="52.5" y2="66" class="pitch-line"/>
+            <circle cx="52.5" cy="34" r="9.15" class="pitch-line"/>
+            <circle cx="52.5" cy="34" r="0.8" class="pitch-spot"/>
+            <!-- Penalty Areas -->
+            <rect x="2" y="13.84" width="16.5" height="40.32" class="pitch-line"/>
+            <rect x="86.5" y="13.84" width="16.5" height="40.32" class="pitch-line"/>
+            <rect x="2" y="24.84" width="5.5" height="18.32" class="pitch-line"/>
+            <rect x="97.5" y="24.84" width="5.5" height="18.32" class="pitch-line"/>
+            <!-- Goal Post Lines -->
+            <rect x="0.5" y="30.34" width="1.5" height="7.32" class="goal-posts"/>
+            <rect x="103" y="30.34" width="1.5" height="7.32" class="goal-posts"/>
+          </svg>
+          <div id="shotPointsLayer"></div>
+
+          <!-- Rich Interactive Shot Modal Card -->
+          <div id="shotDetailModal" class="shot-modal" style="display: none;">
+            <div class="modal-header">
+              <div>
+                <span id="modalTeamBadge" class="modal-badge">TEAM</span>
+                <h4 id="modalPlayerName">Player Name</h4>
+              </div>
+              <button class="modal-close-btn" onclick="closeShotModal()">✕</button>
+            </div>
+            
+            <div class="modal-body">
+              <div class="modal-stats-grid">
+                <div class="m-stat">
+                  <span class="m-label" data-i18n="m_minute">Minute</span>
+                  <strong id="modalMinute">14'</strong>
+                </div>
+                <div class="m-stat">
+                  <span class="m-label" data-i18n="m_outcome">Outcome</span>
+                  <strong id="modalOutcome">Goal</strong>
+                </div>
+                <div class="m-stat">
+                  <span class="m-label">xG</span>
+                  <strong id="modalXG" class="text-green">0.45</strong>
+                </div>
+                <div class="m-stat">
+                  <span class="m-label">xGOT</span>
+                  <strong id="modalXGOT" class="text-gold">0.89</strong>
+                </div>
+              </div>
+
+              <div class="modal-meta-row">
+                <span><strong data-i18n="m_type">Type:</strong> <span id="modalType">Right Foot</span></span>
+                <span><strong data-i18n="m_situation">Situation:</strong> <span id="modalSituation">Regular Play</span></span>
+              </div>
+
+              <div class="goal-mouth-section">
+                <span class="m-label" data-i18n="goal_placement">Goal-Mouth Placement Frame</span>
+                <div class="mini-goal-post">
+                  <div class="goal-net-target" id="goalTargetPoint"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pitch-legend">
+          <span><span class="legend-dot goal"></span> <span>Goal (Gold Pulse)</span></span>
+          <span><span class="legend-dot on-target"></span> <span>On Target</span></span>
+          <span><span class="legend-dot blocked"></span> <span>Blocked</span></span>
+          <span><span class="legend-dot miss"></span> <span>Off Target</span></span>
+        </div>
+      </div>
+
+      <!-- Right Column: Momentum & Match Dominance Bars -->
+      <div class="right-stats-col">
+        <!-- Momentum -->
+        <div class="panel-card">
+          <div class="card-head">
+            <h3 data-i18n="match_momentum">Minute Momentum (xT Flow)</h3>
+            <span class="pill-tag">Live Pressure</span>
+          </div>
+          <div class="momentum-chart" id="momentumChart"></div>
+        </div>
+
+        <!-- Head-to-Head Dominance Comparison -->
+        <div class="panel-card" style="margin-top: 1.5rem;">
+          <div class="card-head">
+            <h3 data-i18n="team_comparison">Match Dominance Metrics</h3>
+          </div>
+          <div class="stats-bars" id="statsBarsContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TACTICAL MATCH DEBRIEF (ANALYSIS NOTES BOX) -->
+    <div class="panel-card debrief-card">
+      <div class="card-head">
+        <div style="display: flex; align-items: center; gap: 0.8rem;">
+          <span class="debrief-badge">TACTICAL DEBRIEF</span>
+          <h3 data-i18n="analyst_notes_title">Tactical Debrief & Match Observations</h3>
+        </div>
+        <span class="analyst-tag">Prepared by Salman P</span>
+      </div>
+      <div class="debrief-content" id="analystNotesContent"></div>
+    </div>
+
+    <!-- OFFICIAL STARTING LINEUPS & BENCH (AL AHLI STYLE) -->
+    <div class="panel-card lineups-card" style="margin-top: 1.8rem;">
+      <div class="card-head">
+        <div>
+          <h3>Official Match Lineups & Formations</h3>
+          <p class="sub-muted">Starting XI, formations, tactical roles, and player ratings</p>
+        </div>
+        <div id="formationBadges" class="formation-badges"></div>
+      </div>
+      <div class="lineups-dual-container" id="lineupsContainer">
+        <!-- Rendered dynamically: Home Starting XI & Away Starting XI -->
+      </div>
+    </div>
+
+    <!-- PLAYER PERFORMANCE INTELLIGENCE TABLE -->
+    <div class="panel-card full-width-card" style="margin-top: 1.8rem;">
+      <div class="card-head">
+        <div>
+          <h3 data-i18n="player_intel">Player Performance Intelligence</h3>
+          <p class="sub-muted" data-i18n="player_sub">Individual match ratings, threat creation, duels & passing output</p>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="pro-table" id="playerStatsTable">
+          <thead>
+            <tr>
+              <th data-i18n="th_player">Player</th>
+              <th data-i18n="th_team">Team</th>
+              <th data-i18n="th_rating">Rating</th>
+              <th data-i18n="th_min">Min</th>
+              <th data-i18n="th_goals">Goals</th>
+              <th data-i18n="th_xg">xG</th>
+              <th data-i18n="th_passes">Acc Passes</th>
+              <th data-i18n="th_duels">Duels Won</th>
+            </tr>
+          </thead>
+          <tbody id="playerTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROFESSIONAL FOOTER -->
+  <footer id="contact" class="pro-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand-logo">
+          <span class="brand-pill"></span>
+          <span class="brand-name">Play<span>Scope</span></span>
+        </div>
+        <p class="footer-desc">Next-generation performance analytics, proprietary spatial models, and tactical data consultancy for elite clubs across the Saudi Pro League and Indian Super League.</p>
+        <div class="footer-founder-tag">
+          Founded & Developed by <strong>Salman</strong> & <strong>Vasudev</strong>
+        </div>
+      </div>
+
+      <div class="footer-contact">
+        <h4 data-i18n="direct_inquiries">Direct Contact & Recruitment</h4>
+        <div class="contact-entry">
+          <span class="c-icon">✉️</span>
+          <a href="mailto:salmanhamdu987@gmail.com">salmanhamdu987@gmail.com</a>
+        </div>
+        <div class="contact-entry">
+          <span class="c-icon">📞</span>
+          <span>+91 9656084090 / +91 7425049249</span>
+        </div>
+        <div class="contact-entry">
+          <span class="c-icon">📍</span>
+          <span>Kozhikode, Kerala, India</span>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <h4 data-i18n="connect">Official Portfolios</h4>
+        <a href="https://www.linkedin.com/in/salman-p-007c/" target="_blank" class="social-chip">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3m1.4 9.74v-8.37H5.06v8.37h2.8z"/></svg>
+          Salman P on LinkedIn ↗
+        </a>
+        <a href="https://github.com/salmancruiz" target="_blank" class="social-chip">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+          PlayScope GitHub Repository ↗
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 PlayScope Intelligence Lab. All Rights Reserved.</span>
+      <span>Empirical Football Analysis & Automated Spatial Dashboards</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
