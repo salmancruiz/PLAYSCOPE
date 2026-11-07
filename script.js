@@ -488,7 +488,6 @@ function renderStatsBars(data) {
 function renderAnalystDebrief(data) {
   window.currentMatchData = data;
 
-  // index.html-le exact ID nammal ivide koduthu
   const container = document.getElementById("analystNotesContent");
   if (!container) return;
 
@@ -496,7 +495,16 @@ function renderAnalystDebrief(data) {
   const awayTeam = data.general?.awayTeam?.name || "Away Team";
   const scoreStr = data.header?.status?.scoreStr || "0 - 0";
 
-  // Player of the match [object Object] bug fix
+  // Score numbers extract cheyyal
+  const scores = scoreStr.split('-').map(s => parseInt(s.trim())) || [0, 0];
+  const homeScore = !isNaN(scores[0]) ? scores[0] : 0;
+  const awayScore = !isNaN(scores[1]) ? scores[1] : 0;
+  const totalGoals = homeScore + awayScore;
+  const goalDiff = Math.abs(homeScore - awayScore);
+  const isDraw = homeScore === awayScore;
+  const winner = homeScore > awayScore ? homeTeam : awayTeam;
+
+  // Man of the Match safe name
   let potm = "Key Midfield Anchor";
   const rawPotm = data.content?.matchFacts?.playerOfTheMatch;
   if (rawPotm) {
@@ -509,41 +517,79 @@ function renderAnalystDebrief(data) {
     }
   }
 
-  // Arabic / English Toggle text check
+  // 1. DYNAMIC MOMENTUM ANALYSIS
+  let momentumEn = "";
+  let momentumAr = "";
+
+  if (isDraw) {
+    momentumEn = `A tightly contested tactical stalemate. Both ${homeTeam} and ${awayTeam} neutralized central passing channels, trading high-tempo pressing phases without establishing prolonged territorial dominance.`;
+    momentumAr = `تعادل تكتيكي متكافئ وشديد الحذر. أغلق كلا الفريقين ممرات التمرير في عمق الملعب وتبادلا الضغط العالي دون فرض سيطرة ميدانية مطلقة لأي طرف.`;
+  } else if (goalDiff >= 2) {
+    momentumEn = `Comprehensive game control established by <strong>${winner}</strong>. Dominant positional rotations and vertical passing sequences dismantled the opponent's defensive structure across both halves.`;
+    momentumAr = `هيمنة تكتيكية شاملة فرضها فريق <strong>${winner}</strong>. تفككت الخطوط الدفاعية للخصم بفضل سرعة التدوير الهجومي والتمريرات الطولية المباشرة.`;
+  } else {
+    momentumEn = `A high-leverage battle decided by fine margins. <strong>${winner}</strong> capitalized on transition moments to sustain territorial pressure during decisive match phases.`;
+    momentumAr = `صراع متقارب حُسم بتفاصيل دقيقة، حيث استغل <strong>${winner}</strong> لحظات التحول الهجومي السريع لفرض تفوقه في الأوقات الحاسمة.`;
+  }
+
+  // 2. DYNAMIC FINISHING & xG ANALYSIS
+  let finishingEn = "";
+  let finishingAr = "";
+
+  if (totalGoals >= 4) {
+    finishingEn = `An open, explosive encounter producing <strong>${scoreStr}</strong>. Both forward lines converted high-xG opportunities inside the box, capitalizing on stretched backlines and rapid counter-attacks.`;
+    finishingAr = `مواجهة مفتوحة وسريعة أنتجت <strong>${scoreStr}</strong>، حيث أظهرت خطوط الهجوم كفاءة تهديفية استثنائية داخل منطقة الجزاء مع استغلال التباعد الدفاعي.`;
+  } else if (totalGoals <= 1) {
+    finishingEn = `A rigid, defense-first display resulting in <strong>${scoreStr}</strong>. Compact low blocks and resolute box defending severely suppressed baseline expected goals (xG).`;
+    finishingAr = `مباراة دفاعية منضبطة أثمرت عن نتيجة <strong>${scoreStr}</strong>، حيث حد التكتل الدفاعي المنخفض من جودة الفرص وصعّب صناعة أهداف محققة (xG).`;
+  } else {
+    finishingEn = `A calculated final score of <strong>${scoreStr}</strong> highlighting efficient spatial shot conversion and measured attacking sustained in the penalty area.`;
+    finishingAr = `نتيجة نهائية محسوبة <strong>${scoreStr}</strong> عكست استغلالاً متوازناً للمساحات وإنهاءً دقيقاً للفرص المتاحة أمام المرمى.`;
+  }
+
+  // 3. DYNAMIC SCOUTING IMPACT
+  let scoutingEn = `Standout tactical influence directed through <strong>${potm}</strong>, controlling midfield turnovers, orchestrating chance generation, and anchoring structure.`;
+  let scoutingAr = `تأثير تكتيكي ومحوري قاده اللاعب <strong>${potm}</strong>، بالتحكم في وتيرة اللعب، وتدوير الكرة في العمق، وقيادة التحولات بدقة عالية.`;
+
+  // Language Check & Render
   const isArabic = (typeof currentLanguage !== 'undefined' && currentLanguage === 'ar');
 
   if (isArabic) {
     container.innerHTML = `
       <div class="debrief-box">
         <h4>⚡ الزخم وحالة المباراة</h4>
-        <p>مراحل سيطرة إيقاعية عالية أظهرها فريق <strong>${homeTeam}</strong>. أثمرت سلاسل التحول السريع عن تمريرات تصاعدية متواصلة نحو الثلث الهجومي الأخير.</p>
+        <p>${momentumAr}</p>
       </div>
       <div class="debrief-box">
-        <h4>🎯 كفاءة إنهاء الفرص مقارنة بالأهداف المتوقعة (xG)</h4>
-        <p>النتيجة النهائية <strong>${scoreStr}</strong> تعكس دقة تحويل عالية للمحاولات داخل منطقة الجزاء مع تجاوز معدلات التهديف المتوقعة.</p>
+        <h4>🎯 كفاءة إنهاء الفرص والأهداف المتوقعة (xG)</h4>
+        <p>${finishingAr}</p>
       </div>
       <div class="debrief-box">
         <h4>🛡️ التأثير التكتيكي البارز</h4>
-        <p>تم توجيه التأثير التكتيكي البارز عبر تحركات اللاعب <strong>${potm}</strong>، بالسيطرة على استرجاع الكرة في وسط الملعب والحفاظ على تمركز دفاعي منضبط.</p>
+        <p>${scoutingAr}</p>
       </div>
     `;
   } else {
     container.innerHTML = `
       <div class="debrief-box">
         <h4>⚡ Momentum & Game State</h4>
-        <p>Decisive high-tempo dominance phases established by <strong>${homeTeam}</strong>. Transition sequences produced consistent progressive passes into the final third.</p>
+        <p>${momentumEn}</p>
       </div>
       <div class="debrief-box">
         <h4>🎯 Finishing Quality vs xG</h4>
-        <p>A final score of <strong>${scoreStr}</strong> highlights high spatial conversion inside the penalty box, outperforming baseline chance probabilities.</p>
+        <p>${finishingEn}</p>
       </div>
       <div class="debrief-box">
         <h4>🛡️ Tactical Scouting Impact</h4>
-        <p>Standout tactical influence directed through <strong>${potm}</strong>, controlling midfield turnovers and anchoring structured defensive shape.</p>
+        <p>${scoutingEn}</p>
       </div>
     `;
   }
 }
+
+window.updateDebriefText = function(data) {
+  renderAnalystDebrief(data);
+};
 
 // Language maattumbol debrief auto-update aavaan
 window.updateDebriefText = function(data) {
@@ -554,6 +600,7 @@ window.updateDebriefText = function(data) {
 window.updateDebriefText = function(data) {
   renderAnalystDebrief(data);
 };
+// 13. Official Lineups, Player Photos, Formations & Subs (FotMob Style)
 function renderLineups(data) {
   const container = document.getElementById("lineupsContainer");
   const badgesContainer = document.getElementById("formationBadges");
@@ -568,7 +615,7 @@ function renderLineups(data) {
     return;
   }
 
-  // FotMob API-le ella standard format-um check cheyyunnu
+  // FotMob JSON lineup detection
   let teams = [];
   if (Array.isArray(lineupData.lineup) && lineupData.lineup.length >= 2) {
     teams = lineupData.lineup;
@@ -583,35 +630,76 @@ function renderLineups(data) {
     return;
   }
 
-  // Lineup rendering
+  // Home & Away Teams Grid
   teams.forEach((team, idx) => {
-    const teamName = idx === 0 ? (data.general?.homeTeam?.name || "Home") : (data.general?.awayTeam?.name || "Away");
+    const isHome = (idx === 0);
+    const teamName = isHome ? (data.general?.homeTeam?.name || "Home") : (data.general?.awayTeam?.name || "Away");
     const formation = team.formation || "4-3-3";
 
     if (badgesContainer) {
       badgesContainer.innerHTML += `<span class="badge" style="margin-right: 8px;">${teamName}: ${formation}</span>`;
     }
 
-    const players = team.players || team.starters || [];
-    const flattenedPlayers = Array.isArray(players[0]) ? players.flat() : players;
+    const starters = (team.players || team.starters || []).flat().slice(0, 11);
+    const subs = (team.subs || team.bench || []).flat();
 
     const teamCol = document.createElement("div");
     teamCol.className = "lineup-team-card";
-    teamCol.innerHTML = `
-      <div style="font-weight: 700; margin-bottom: 12px; color: var(--accent-blue);">${teamName} XI (${formation})</div>
-      <div class="players-list" style="display: flex; flex-direction: column; gap: 8px;">
-        ${flattenedPlayers.slice(0, 11).map(p => {
-          const pName = p.name?.fullName || p.name?.display || p.name || p.fullName || "Player";
-          const pRating = p.rating?.num || (typeof p.rating === "number" ? p.rating : null);
-          return `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 13px;">
-              <span><strong>${p.shirtNumber || ''}</strong> ${pName}</span>
-              ${pRating ? `<span style="background: rgba(0, 209, 138, 0.15); color: #00d18a; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px;">★ ${pRating}</span>` : ''}
-            </div>
-          `;
-        }).join('')}
+    teamCol.style.cssText = "background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px;";
+
+    // Header
+    let teamHtml = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 15px;">${teamName}</span>
+        <span style="font-size: 12px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 8px; border-radius: 12px; font-weight: 600;">XI: ${formation}</span>
       </div>
+      
+      <!-- Starting XI -->
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px;">
     `;
+
+    // Starting XI with Real Photos & Ratings
+    starters.forEach(p => {
+      const pId = p.id || '';
+      const pName = p.name?.fullName || p.name?.display || p.name || p.fullName || "Player";
+      const pRating = p.rating?.num || (typeof p.rating === "number" ? p.rating : null);
+      const photoUrl = pId ? `https://images.fotmob.com/image_resources/playerimages/${pId}.png` : '';
+
+      teamHtml += `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <img src="${photoUrl}" onerror="this.onerror=null; this.src='https://images.fotmob.com/image_resources/playerimages/default.png';" 
+                 style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1e293b; border: 1px solid rgba(255,255,255,0.1);" />
+            <div>
+              <div style="font-size: 13px; font-weight: 600; color: #f1f5f9;">${pName}</div>
+              <div style="font-size: 11px; color: #94a3b8;">#${p.shirtNumber || ''}</div>
+            </div>
+          </div>
+          ${pRating ? `<span style="background: rgba(0, 209, 138, 0.15); color: #00d18a; padding: 3px 7px; border-radius: 6px; font-weight: 700; font-size: 12px;">★ ${pRating}</span>` : ''}
+        </div>
+      `;
+    });
+
+    teamHtml += `</div>`;
+
+    // Substitutes / Bench Section
+    if (subs.length > 0) {
+      teamHtml += `
+        <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; letter-spacing: 0.5px;">Substitutes (Bench)</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          ${subs.map(sub => {
+            const sName = sub.name?.fullName || sub.name?.display || sub.name || sub.fullName || "Sub";
+            return `
+              <span style="font-size: 11px; background: rgba(255,255,255,0.04); color: #cbd5e1; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                #${sub.shirtNumber || ''} ${sName}
+              </span>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    teamCol.innerHTML = teamHtml;
     container.appendChild(teamCol);
   });
 }
