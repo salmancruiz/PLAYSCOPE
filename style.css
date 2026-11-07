@@ -872,3 +872,100 @@ body.rtl-mode .pro-table th,
 body.rtl-mode .card-action,
 body.rtl-mode .debrief-card { text-align: right; }
 body.rtl-mode .debrief-card { border-left: none; border-right: 4px solid var(--accent-green); }
+/* ==========================================================================
+   STEP 1: RESPONSIVE ENGINE (LAPTOP UNTOUCHED | TAB & MOBILE ADAPTIVE)
+   ========================================================================== */
+
+/* 1. TABLET VIEW (Screens between 769px and 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .leagues-grid, .cards-container, [class*="league-cards"] {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+}
+
+/* 2. MOBILE PHONE VIEW (Screens 768px and below) */
+@media (max-width: 768px) {
+  /* Header clean aakkal */
+  header, nav, .navbar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 12px 16px !important;
+    gap: 10px !important;
+  }
+
+  /* Search dropdown hero text-nte mukalil keri kidakkathirikkan */
+  .search-container, .quick-search, [class*="search"] {
+    position: relative !important;
+  }
+
+  /* Search dropdown hidden by default, click cheythaal mathram open aavum */
+  .search-dropdown, .search-results, [class*="dropdown"] {
+    position: absolute !important;
+    top: 110% !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 92vw !important;
+    max-width: 340px !important;
+    margin: 0 auto !important;
+    z-index: 9999 !important;
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 12px !important;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.8) !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Hero Section Mobile Adjustments */
+  .hero, [class*="hero"] {
+    padding: 24px 16px !important;
+    text-align: center !important;
+  }
+
+  .hero h1, h1, .hero-title {
+    font-size: 26px !important;
+    line-height: 1.25 !important;
+    word-break: break-word !important;
+  }
+
+  .hero p, .hero-subtitle {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    padding: 0 8px !important;
+  }
+
+  /* Founder info tag spacing */
+  .founder-tag, [class*="founder"], [class*="engineered"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    font-size: 11px !important;
+    margin-top: 14px !important;
+  }
+
+  /* League cards vertical aakkal (Flipkart/Amazon mobile list pole) */
+  .leagues-grid, .cards-container, [class*="league-cards"], .grid-3 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+    padding: 0 12px !important;
+  }
+
+  .league-card, .card {
+    width: 100% !important;
+    min-height: auto !important;
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Pitch & Analytics Lab Mobile Scroll */
+  .pitch-container, .match-lab, canvas, svg {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+}
