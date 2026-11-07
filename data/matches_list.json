@@ -34,5 +34,17 @@
     "homeLogo": "https://images.fotmob.com/image_resources/logo/teamlogo/165180_small.png",
     "awayLogo": "https://images.fotmob.com/image_resources/logo/teamlogo/578656_small.png",
     "file": "data/matches/churchill_brothers_northeast_united_fc_6362013.json"
+  },
+  {
+    "id": "5970193",
+    "title": "Al Nassr FC vs Al Kholood (5 - 3)",
+    "league": "SPL",
+    "season": "2026",
+    "date": "2026-10-29",
+    "homeTeam": "Al Nassr FC",
+    "awayTeam": "Al Kholood",
+    "homeLogo": "https://images.fotmob.com/image_resources/logo/teamlogo/101918_small.png",
+    "awayLogo": "https://images.fotmob.com/image_resources/logo/teamlogo/1523706_small.png",
+    "file": "data/matches/al_nassr_fc_al_kholood_5970193.json"
   }
 ]
