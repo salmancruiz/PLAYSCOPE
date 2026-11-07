@@ -486,20 +486,17 @@ function renderStatsBars(data) {
 
 // 12. Automated Tactical Debrief by Salman P
 function renderAnalystDebrief(data) {
-  // Current match data save cheyyunnu (Language maattumbol debrief auto-update aavaan)
   window.currentMatchData = data;
 
-  const container = document.getElementById("analystDebrief") || 
-                    document.getElementById("debriefContainer") || 
-                    document.querySelector(".debrief-container") || 
-                    document.querySelector("[id*='debrief']");
+  // index.html-le exact ID nammal ivide koduthu
+  const container = document.getElementById("analystNotesContent");
   if (!container) return;
 
   const homeTeam = data.general?.homeTeam?.name || "Home Team";
   const awayTeam = data.general?.awayTeam?.name || "Away Team";
   const scoreStr = data.header?.status?.scoreStr || "0 - 0";
 
-  // 1. [object Object] Bug Fix (Real Player Name extract cheyyal)
+  // Player of the match [object Object] bug fix
   let potm = "Key Midfield Anchor";
   const rawPotm = data.content?.matchFacts?.playerOfTheMatch;
   if (rawPotm) {
@@ -512,7 +509,7 @@ function renderAnalystDebrief(data) {
     }
   }
 
-  // 2. Arabic / English Content Check
+  // Arabic / English Toggle text check
   const isArabic = (typeof currentLanguage !== 'undefined' && currentLanguage === 'ar');
 
   if (isArabic) {
@@ -547,6 +544,11 @@ function renderAnalystDebrief(data) {
     `;
   }
 }
+
+// Language maattumbol debrief auto-update aavaan
+window.updateDebriefText = function(data) {
+  renderAnalystDebrief(data);
+};
 
 // Language switch cheyyumbol debrief re-render aavaanulla connection
 window.updateDebriefText = function(data) {
