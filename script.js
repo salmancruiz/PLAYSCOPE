@@ -560,9 +560,128 @@ window.updateDebriefText = function(data) {
 window.updateDebriefText = function(data) {
   renderAnalystDebrief(data);
 };
-// 13. Official Lineups, Player Photos, Formations & Subs (FotMob Style)
-// 13. Official Pitch Formations + Clickable Player Tactical Popups
-// 13. Official Pitch Formations + PlayScope Intelligent Player Telemetry
+// 12. Professional Spatial Shot Map (Two-Sided + ⚽ Goals + Team Filters)
+let currentShotTeamFilter = "all";
+let currentShotStatusFilter = "all";
+
+function renderShotMap(data, filter) {
+  window.currentMatchData = data;
+  const container = document.getElementById("shotPointsLayer") || 
+                    document.getElementById("shotMapContainer") || 
+                    document.querySelector(".shotmap-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const homeTeam = data.general?.homeTeam?.name || "Home";
+  const awayTeam = data.general?.awayTeam?.name || "Away";
+  const homeId = data.general?.homeTeam?.id;
+
+  // Filter Buttons Injection (Once)
+  let teamFilterBar = document.getElementById("shotMapTeamFilterBar");
+  if (!teamFilterBar) {
+    teamFilterBar = document.createElement("div");
+    teamFilterBar.id = "shotMapTeamFilterBar";
+    teamFilterBar.style.cssText = "display: flex; gap: 8px; margin-bottom: 12px; justify-content: flex-end; flex-wrap: wrap;";
+    const filterContainer = document.querySelector(".shot-filters") || container.parentElement;
+    if (filterContainer && filterContainer.parentElement) {
+      filterContainer.parentElement.insertBefore(teamFilterBar, filterContainer);
+    }
+  }
+
+  if (teamFilterBar) {
+    teamFilterBar.innerHTML = `
+      <button class="sm-team-toggle" onclick="setShotTeamFilter('all', this)" style="background: ${currentShotTeamFilter === 'all' ? '#38bdf8' : 'rgba(255,255,255,0.06)'}; color: ${currentShotTeamFilter === 'all' ? '#000' : '#cbd5e1'}; border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">Both Teams</button>
+      <button class="sm-team-toggle" onclick="setShotTeamFilter('home', this)" style="background: ${currentShotTeamFilter === 'home' ? '#38bdf8' : 'rgba(255,255,255,0.06)'}; color: ${currentShotTeamFilter === 'home' ? '#000' : '#cbd5e1'}; border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">${homeTeam} (Right →)</button>
+      <button class="sm-team-toggle" onclick="setShotTeamFilter('away', this)" style="background: ${currentShotTeamFilter === 'away' ? '#38bdf8' : 'rgba(255,255,255,0.06)'}; color: ${currentShotTeamFilter === 'away' ? '#000' : '#cbd5e1'}; border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">(← Left) ${awayTeam}</button>
+    `;
+  }
+
+  // Extract Shots
+  const allShots = (typeof getAllShots === 'function' ? getAllShots(data) : null) || data.content?.shotmap?.shots || [];
+
+  allShots.forEach(shot => {
+    const isHome = (shot.teamId === homeId || shot.isHome);
+    const isGoal = shot.eventType === "Goal" || shot.isGoal;
+    const isTarget = shot.isOnTarget && !isGoal;
+    const isBlocked = shot.isBlocked || shot.eventType === "Block";
+    const isMiss = !isGoal && !shot.isOnTarget && !isBlocked;
+
+    // Filters
+    if (currentShotTeamFilter === "home" && !isHome) return;
+    if (currentShotTeamFilter === "away" && isHome) return;
+
+    const activeFilter = filter || currentShotStatusFilter;
+    if (activeFilter === "Goal" && !isGoal) return;
+    if (activeFilter === "target" && !isTarget) return;
+    if (activeFilter === "blocked" && !isBlocked) return;
+    if (activeFilter === "miss" && !isMiss) return;
+
+    // Two-Sided Normalization
+    let rawX = parseFloat(shot.x);
+    let rawY = parseFloat(shot.y);
+    let projectedX = isHome ? rawX : (105 - rawX);
+    let projectedY = isHome ? rawY : (68 - rawY);
+
+    const leftPct = (projectedX / 105) * 100;
+    const topPct = (projectedY / 68) * 100;
+    const xG = shot.expectedGoals ? parseFloat(shot.expectedGoals).toFixed(2) : "0.08";
+    const pName = shot.playerName || shot.player?.name || "Player";
+    const min = shot.min || shot.time || "—";
+
+    const marker = document.createElement("div");
+    marker.className = "shot-marker";
+    marker.style.position = "absolute";
+    marker.style.left = leftPct + "%";
+    marker.style.top = topPct + "%";
+    marker.style.transform = "translate(-50%, -50%)";
+    marker.style.cursor = "pointer";
+    marker.title = `${pName} (${min}') • ${isGoal ? 'GOAL ⚽' : (isTarget ? 'On Target' : isBlocked ? 'Blocked' : 'Missed')} • xG: ${xG}`;
+
+    if (isGoal) {
+      marker.innerHTML = "⚽";
+      marker.style.fontSize = "18px";
+      marker.style.lineHeight = "1";
+      marker.style.zIndex = "25";
+      marker.style.filter = "drop-shadow(0 0 10px #facc15) drop-shadow(0 0 4px #000)";
+      marker.style.transition = "transform 0.2s ease";
+      marker.onmouseover = () => marker.style.transform = "translate(-50%, -50%) scale(1.6)";
+      marker.onmouseout = () => marker.style.transform = "translate(-50%, -50%) scale(1)";
+    } else {
+      let dotColor = isTarget ? "#00d18a" : (isBlocked ? "#38bdf8" : "#ef4444");
+      let dotSize = Math.max(8, Math.min(16, Math.round(parseFloat(xG) * 22)));
+      marker.style.width = dotSize + "px";
+      marker.style.height = dotSize + "px";
+      marker.style.borderRadius = "50%";
+      marker.style.backgroundColor = dotColor;
+      marker.style.border = "1.5px solid rgba(255, 255, 255, 0.9)";
+      marker.style.boxShadow = `0 0 8px ${dotColor}`;
+      marker.style.zIndex = "10";
+      marker.style.transition = "transform 0.2s ease";
+      marker.onmouseover = () => marker.style.transform = "translate(-50%, -50%) scale(1.5)";
+      marker.onmouseout = () => marker.style.transform = "translate(-50%, -50%) scale(1)";
+    }
+
+    container.appendChild(marker);
+  });
+}
+
+// Global Filter Handler
+window.setShotTeamFilter = function(teamVal, btn) {
+  currentShotTeamFilter = teamVal;
+  document.querySelectorAll(".sm-team-toggle").forEach(b => {
+    b.style.background = "rgba(255,255,255,0.06)";
+    b.style.color = "#cbd5e1";
+  });
+  if (btn) {
+    btn.style.background = "#38bdf8";
+    btn.style.color = "#000";
+  }
+  if (window.currentMatchData) {
+    renderShotMap(window.currentMatchData, currentShotStatusFilter);
+  }
+};
+
 // 13. Official Pitch Formations + ⭐ MOTM Glowing Star Badge
 function renderLineups(data) {
   const container = document.getElementById("lineupsContainer");
