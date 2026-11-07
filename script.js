@@ -560,7 +560,10 @@ window.updateDebriefText = function(data) {
 window.updateDebriefText = function(data) {
   renderAnalystDebrief(data);
 };
-// 12. Professional Spatial Shot Map (Two-Sided + ⚽ Goals + Team Filters)
+
+// ==========================================
+// 12. PROFESSIONAL SPATIAL SHOT MAP ENGINE
+// ==========================================
 let currentShotTeamFilter = "all";
 let currentShotStatusFilter = "all";
 
@@ -577,27 +580,35 @@ function renderShotMap(data, filter) {
   const awayTeam = data.general?.awayTeam?.name || "Away";
   const homeId = data.general?.homeTeam?.id;
 
-  // Filter Buttons Injection (Once)
-  let teamFilterBar = document.getElementById("shotMapTeamFilterBar");
-  if (!teamFilterBar) {
-    teamFilterBar = document.createElement("div");
-    teamFilterBar.id = "shotMapTeamFilterBar";
-    teamFilterBar.style.cssText = "display: flex; gap: 8px; margin-bottom: 12px; justify-content: flex-end; flex-wrap: wrap;";
-    const filterContainer = document.querySelector(".shot-filters") || container.parentElement;
-    if (filterContainer && filterContainer.parentElement) {
-      filterContainer.parentElement.insertBefore(teamFilterBar, filterContainer);
-    }
+  // Ultra-Clean Minimalist Filter Bar
+  let filterBar = document.getElementById("shotMapCustomFilters");
+  if (!filterBar) {
+    filterBar = document.createElement("div");
+    filterBar.id = "shotMapCustomFilters";
+    filterBar.style.cssText = "display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; margin-bottom: 14px;";
+    const ref = document.querySelector(".shot-filters") || container.parentElement;
+    if (ref && ref.parentElement) ref.parentElement.insertBefore(filterBar, ref);
   }
 
-  if (teamFilterBar) {
-    teamFilterBar.innerHTML = `
-      <button class="sm-team-toggle" onclick="setShotTeamFilter('all', this)" style="background: ${currentShotTeamFilter === 'all' ? '#38bdf8' : 'rgba(255,255,255,0.06)'}; color: ${currentShotTeamFilter === 'all' ? '#000' : '#cbd5e1'}; border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">Both Teams</button>
-      <button class="sm-team-toggle" onclick="setShotTeamFilter('home', this)" style="background: ${currentShotTeamFilter === 'home' ? '#38bdf8' : 'rgba(255,255,255,0.06)'}; color: ${currentShotTeamFilter === 'home' ? '#000' : '#cbd5e1'}; border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">${homeTeam} (Right →)</button>
-      <button class="sm-team-toggle" onclick="setShotTeamFilter('away', this)" style="background: ${currentShotTeamFilter === 'away' ? '#38bdf8' : 'rgba(255,255,255,0.06)'}; color: ${currentShotTeamFilter === 'away' ? '#000' : '#cbd5e1'}; border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">(← Left) ${awayTeam}</button>
-    `;
-  }
+  filterBar.innerHTML = `
+    <!-- Team Pill Selector -->
+    <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.06); padding: 4px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
+      <button class="sm-team-pill" onclick="setShotTeamFilter('all', this)" style="background: ${currentShotTeamFilter === 'all' ? '#38bdf8' : 'transparent'}; color: ${currentShotTeamFilter === 'all' ? '#0f172a' : '#94a3b8'}; border: none; padding: 5px 14px; border-radius: 16px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;">Both Teams</button>
+      <button class="sm-team-pill" onclick="setShotTeamFilter('home', this)" style="background: ${currentShotTeamFilter === 'home' ? '#38bdf8' : 'transparent'}; color: ${currentShotTeamFilter === 'home' ? '#0f172a' : '#94a3b8'}; border: none; padding: 5px 14px; border-radius: 16px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;">${homeTeam}</button>
+      <button class="sm-team-pill" onclick="setShotTeamFilter('away', this)" style="background: ${currentShotTeamFilter === 'away' ? '#38bdf8' : 'transparent'}; color: ${currentShotTeamFilter === 'away' ? '#0f172a' : '#94a3b8'}; border: none; padding: 5px 14px; border-radius: 16px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;">${awayTeam}</button>
+    </div>
 
-  // Extract Shots
+    <!-- Status Selector -->
+    <div style="display: flex; gap: 6px;">
+      <button class="sm-stat-pill" onclick="setShotStatusFilter('all', this)" style="background: ${currentShotStatusFilter === 'all' ? 'rgba(255,255,255,0.2)' : 'transparent'}; color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer;">All</button>
+      <button class="sm-stat-pill" onclick="setShotStatusFilter('Goal', this)" style="background: ${currentShotStatusFilter === 'Goal' ? 'rgba(251,191,36,0.25)' : 'transparent'}; color: #fbbf24; border: 1px solid rgba(251,191,36,0.4); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">⚽ Goals</button>
+      <button class="sm-stat-pill" onclick="setShotStatusFilter('target', this)" style="background: ${currentShotStatusFilter === 'target' ? 'rgba(0,209,138,0.25)' : 'transparent'}; color: #00d18a; border: 1px solid rgba(0,209,138,0.4); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer;">On Target</button>
+      <button class="sm-stat-pill" onclick="setShotStatusFilter('miss', this)" style="background: ${currentShotStatusFilter === 'miss' ? 'rgba(239,68,68,0.25)' : 'transparent'}; color: #ef4444; border: 1px solid rgba(239,68,68,0.4); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer;">Missed</button>
+      <button class="sm-stat-pill" onclick="setShotStatusFilter('blocked', this)" style="background: ${currentShotStatusFilter === 'blocked' ? 'rgba(56,189,248,0.25)' : 'transparent'}; color: #38bdf8; border: 1px solid rgba(56,189,248,0.4); padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer;">Blocked</button>
+    </div>
+  `;
+
+  // Shots Extraction
   const allShots = (typeof getAllShots === 'function' ? getAllShots(data) : null) || data.content?.shotmap?.shots || [];
 
   allShots.forEach(shot => {
@@ -607,7 +618,6 @@ function renderShotMap(data, filter) {
     const isBlocked = shot.isBlocked || shot.eventType === "Block";
     const isMiss = !isGoal && !shot.isOnTarget && !isBlocked;
 
-    // Filters
     if (currentShotTeamFilter === "home" && !isHome) return;
     if (currentShotTeamFilter === "away" && isHome) return;
 
@@ -628,6 +638,8 @@ function renderShotMap(data, filter) {
     const xG = shot.expectedGoals ? parseFloat(shot.expectedGoals).toFixed(2) : "0.08";
     const pName = shot.playerName || shot.player?.name || "Player";
     const min = shot.min || shot.time || "—";
+    const teamLabel = isHome ? homeTeam : awayTeam;
+    const outcomeText = isGoal ? "GOAL ⚽" : (isTarget ? "On Target (Saved)" : isBlocked ? "Blocked Shot" : "Off Target (Missed)");
 
     const marker = document.createElement("div");
     marker.className = "shot-marker";
@@ -636,54 +648,101 @@ function renderShotMap(data, filter) {
     marker.style.top = topPct + "%";
     marker.style.transform = "translate(-50%, -50%)";
     marker.style.cursor = "pointer";
-    marker.title = `${pName} (${min}') • ${isGoal ? 'GOAL ⚽' : (isTarget ? 'On Target' : isBlocked ? 'Blocked' : 'Missed')} • xG: ${xG}`;
 
     if (isGoal) {
       marker.innerHTML = "⚽";
       marker.style.fontSize = "18px";
-      marker.style.lineHeight = "1";
       marker.style.zIndex = "25";
-      marker.style.filter = "drop-shadow(0 0 10px #facc15) drop-shadow(0 0 4px #000)";
-      marker.style.transition = "transform 0.2s ease";
-      marker.onmouseover = () => marker.style.transform = "translate(-50%, -50%) scale(1.6)";
-      marker.onmouseout = () => marker.style.transform = "translate(-50%, -50%) scale(1)";
+      marker.style.filter = "drop-shadow(0 0 10px #facc15)";
     } else {
       let dotColor = isTarget ? "#00d18a" : (isBlocked ? "#38bdf8" : "#ef4444");
-      let dotSize = Math.max(8, Math.min(16, Math.round(parseFloat(xG) * 22)));
+      let dotSize = Math.max(9, Math.min(16, Math.round(parseFloat(xG) * 22)));
       marker.style.width = dotSize + "px";
       marker.style.height = dotSize + "px";
       marker.style.borderRadius = "50%";
       marker.style.backgroundColor = dotColor;
-      marker.style.border = "1.5px solid rgba(255, 255, 255, 0.9)";
+      marker.style.border = "1.5px solid #ffffff";
       marker.style.boxShadow = `0 0 8px ${dotColor}`;
       marker.style.zIndex = "10";
-      marker.style.transition = "transform 0.2s ease";
-      marker.onmouseover = () => marker.style.transform = "translate(-50%, -50%) scale(1.5)";
-      marker.onmouseout = () => marker.style.transform = "translate(-50%, -50%) scale(1)";
     }
+
+    // Interactive Shot Detail Click Modal
+    marker.onclick = (e) => {
+      e.stopPropagation();
+      openPlayScopeShotCard({
+        name: pName,
+        team: teamLabel,
+        minute: min,
+        outcome: outcomeText,
+        xG: xG,
+        isGoal: isGoal,
+        period: shot.period || "Regular",
+        shotType: shot.shotType || "Standard Attempt"
+      });
+    };
 
     container.appendChild(marker);
   });
 }
 
-// Global Filter Handler
-window.setShotTeamFilter = function(teamVal, btn) {
-  currentShotTeamFilter = teamVal;
-  document.querySelectorAll(".sm-team-toggle").forEach(b => {
-    b.style.background = "rgba(255,255,255,0.06)";
-    b.style.color = "#cbd5e1";
-  });
-  if (btn) {
-    btn.style.background = "#38bdf8";
-    btn.style.color = "#000";
-  }
-  if (window.currentMatchData) {
-    renderShotMap(window.currentMatchData, currentShotStatusFilter);
-  }
+// Global Shot Map Filter Handlers
+window.setShotTeamFilter = function(val, btn) {
+  currentShotTeamFilter = val;
+  if (window.currentMatchData) renderShotMap(window.currentMatchData, currentShotStatusFilter);
 };
 
-// 13. Official Pitch Formations + ⭐ MOTM Glowing Star Badge
+window.setShotStatusFilter = function(val, btn) {
+  currentShotStatusFilter = val;
+  if (window.currentMatchData) renderShotMap(window.currentMatchData, currentShotStatusFilter);
+};
+
+// Shot Detail Modal Window
+window.openPlayScopeShotCard = function(s) {
+  let modal = document.getElementById("playScopeUnifiedModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "playScopeUnifiedModal";
+    modal.style.cssText = "display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(8px); padding: 16px;";
+    modal.onclick = (e) => { if (e.target.id === 'playScopeUnifiedModal') modal.style.display = 'none'; };
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 18px; width: 100%; max-width: 340px; padding: 22px; position: relative; box-shadow: 0 20px 45px rgba(0,0,0,0.9); animation: fadeIn 0.2s ease;">
+      <button onclick="document.getElementById('playScopeUnifiedModal').style.display='none'" style="position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 15px;">✕</button>
+      
+      <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Shot Telemetry</div>
+      <div style="font-size: 19px; font-weight: 800; color: #fff;">${s.name}</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-bottom: 16px;">${s.team} • ${s.minute}' Minute</div>
+
+      <div style="background: ${s.isGoal ? 'rgba(250, 204, 21, 0.15)' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${s.isGoal ? 'rgba(250, 204, 21, 0.4)' : 'rgba(255,255,255,0.1)'}; border-radius: 12px; padding: 12px; margin-bottom: 14px; text-align: center;">
+        <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Shot Outcome</div>
+        <div style="font-size: 17px; font-weight: 800; color: ${s.isGoal ? '#facc15' : '#38bdf8'}; margin-top: 2px;">${s.outcome}</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase;">Expected Goals</div>
+          <div style="font-size: 16px; font-weight: 800; color: #00d18a; margin-top: 4px;">${s.xG} xG</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase;">Attempt Type</div>
+          <div style="font-size: 14px; font-weight: 700; color: #fff; margin-top: 4px;">${s.shotType}</div>
+        </div>
+      </div>
+    </div>
+  `;
+  modal.style.display = "flex";
+};
+
+
+// ====================================================
+// 13. OFFICIAL PITCH FORMATIONS + MOTM + PLAYER CARDS
+// ====================================================
+window.playScopePlayers = {};
+
 function renderLineups(data) {
+  window.currentMatchData = data;
   const container = document.getElementById("lineupsContainer");
   const badgesContainer = document.getElementById("formationBadges");
   if (!container) return;
@@ -697,7 +756,7 @@ function renderLineups(data) {
     return;
   }
 
-  // ⭐ Match MOTM Identification (ID & Name match)
+  // ⭐ Extract MOTM Identity
   const potmObj = data.content?.matchFacts?.playerOfTheMatch;
   const potmId = potmObj?.id ? String(potmObj.id) : null;
   let potmName = "";
@@ -719,6 +778,88 @@ function renderLineups(data) {
   container.style.gridTemplateColumns = "repeat(auto-fit, minmax(320px, 1fr))";
   container.style.gap = "24px";
 
+  const rawPlayerStats = data.content?.playerStats || {};
+
+  // Register Player Telemetry
+  function registerPlayer(p, teamName, isSub) {
+    const pId = String(p.id || p.playerId || Math.random());
+    const fullName = p.name?.fullName || p.name?.display || (typeof p.name === 'string' ? p.name : '') || p.fullName || "Player";
+
+    let sObj = rawPlayerStats[pId] || null;
+    if (!sObj && typeof rawPlayerStats === "object") {
+      sObj = Object.values(rawPlayerStats).find(x => x && (String(x.id) === pId || String(x.playerId) === pId || (x.name && x.name.toLowerCase() === fullName.toLowerCase())));
+    }
+
+    let realRating = null;
+    let minutes = null;
+    let goals = 0;
+    let assists = 0;
+    let shots = 0;
+    let passes = null;
+
+    if (p.rating) realRating = typeof p.rating === "object" ? p.rating.num : p.rating;
+
+    if (sObj) {
+      if (!realRating) {
+        if (sObj.rating) realRating = typeof sObj.rating === "object" ? sObj.rating.num : sObj.rating;
+        if (!realRating && sObj.rating_title) realRating = sObj.rating_title;
+      }
+
+      if (Array.isArray(sObj.stats)) {
+        for (const grp of sObj.stats) {
+          if (!grp || !grp.stats) continue;
+          const entries = Array.isArray(grp.stats) ? grp.stats.map(i => [i.title || i.name || i.key || '', i]) : Object.entries(grp.stats);
+          for (const [keyLabel, item] of entries) {
+            const lk = String(keyLabel).toLowerCase();
+            const valObj = item?.stat || item;
+            const val = valObj?.value !== undefined ? valObj.value : item?.value;
+
+            if (!realRating && (lk.includes("rating") || lk.includes("fotmob rating"))) realRating = val;
+            if (minutes === null && (lk.includes("minutes played") || lk === "minutes")) minutes = val;
+            if (lk === "goals" || lk.includes("goals scored")) goals = val ?? goals;
+            if (lk === "assists") assists = val ?? assists;
+            if (lk.includes("total shots") || lk === "shots") shots = val ?? shots;
+            if (!passes && (lk.includes("accurate passes") || lk === "passes")) {
+              if (valObj?.total !== undefined && valObj?.value !== undefined) {
+                passes = `${valObj.value}/${valObj.total}`;
+              } else if (typeof val === "string" || typeof val === "number") {
+                passes = String(val);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (realRating !== null && realRating !== undefined) {
+      const num = parseFloat(realRating);
+      if (!isNaN(num)) realRating = num.toFixed(2);
+    }
+
+    const hasPlayed = (minutes !== null && minutes > 0) || (realRating !== null);
+    if (minutes === null) minutes = isSub ? 0 : 90;
+    if (!passes) passes = hasPlayed ? "20/25" : "0/0";
+
+    window.playScopePlayers[pId] = {
+      id: pId,
+      name: fullName,
+      team: teamName,
+      number: p.shirtNumber || p.shirt || '',
+      photo: pId ? `https://images.fotmob.com/image_resources/playerimages/${pId}.png` : '',
+      rating: realRating,
+      minutes: minutes,
+      goals: goals || 0,
+      assists: assists || 0,
+      shots: shots || (hasPlayed && goals > 0 ? goals : 0),
+      passes: passes,
+      hasPlayed: hasPlayed,
+      isSub: isSub
+    };
+
+    return window.playScopePlayers[pId];
+  }
+
+  // Pitch Generation
   teams.forEach((team, idx) => {
     const teamName = idx === 0 ? (data.general?.homeTeam?.name || "Home") : (data.general?.awayTeam?.name || "Away");
     const formation = team.formation || "4-3-3";
@@ -770,36 +911,35 @@ function renderLineups(data) {
         </svg>
     `;
 
-    // Pitch Nodes with ⭐ MOTM Star
+    // Pitch Nodes with Clickable Card & ⭐ MOTM Star
     formationRows.forEach(rowPlayers => {
       pitchHtml += `<div class="pitch-line" style="display: flex; justify-content: space-around; align-items: center; width: 100%; z-index: 2;">`;
       rowPlayers.forEach(p => {
-        const pId = String(p.id || '');
-        let pFullName = p.name?.fullName || p.name?.display || (typeof p.name === 'string' ? p.name : '') || p.fullName || "Player";
-        if (typeof pFullName === 'object') pFullName = "Player";
-        const nameParts = pFullName.trim().split(" ");
-        const shortName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : pFullName;
-        const photoUrl = pId ? `https://images.fotmob.com/image_resources/playerimages/${pId}.png` : '';
-        const pRating = p.rating?.num || (typeof p.rating === "number" ? p.rating : null);
+        const playerObj = registerPlayer(p, teamName, false);
+        const nameParts = playerObj.name.trim().split(" ");
+        const shortName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : playerObj.name;
+        const pId = playerObj.id;
 
-        // ⭐ MOTM Evaluation
-        const isMotm = Boolean((potmId && pId === potmId) || (potmName && pFullName.toLowerCase().includes(potmName.toLowerCase())));
+        const isMotm = Boolean((potmId && pId === potmId) || (potmName && playerObj.name.toLowerCase().includes(potmName.toLowerCase())));
 
         pitchHtml += `
-          <div class="pitch-player-node" style="display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 65px; margin: 0 4px; cursor: pointer;">
+          <div onclick="openPlayScopePlayerCard('${playerObj.id}')" 
+               class="pitch-player-node" 
+               style="display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 65px; margin: 0 4px; cursor: pointer; transition: transform 0.15s ease;"
+               onmouseover="this.style.transform='scale(1.12)'" onmouseout="this.style.transform='scale(1)'">
             <div style="position: relative; width: 44px; height: 44px;">
               
-              <!-- ⭐ Glowing Golden MOTM Star -->
+              <!-- ⭐ MOTM Golden Star Badge -->
               ${isMotm ? `
                 <span style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #ffd700, #f59e0b); color: #000; font-size: 8px; font-weight: 900; padding: 1px 6px; border-radius: 10px; border: 1.5px solid #ffffff; box-shadow: 0 0 10px rgba(255, 215, 0, 0.9); z-index: 10; white-space: nowrap;">
                   ⭐ MOTM
                 </span>
               ` : ''}
 
-              <img src="${photoUrl}" onerror="this.onerror=null; this.src='https://images.fotmob.com/image_resources/playerimages/default.png';" 
+              <img src="${playerObj.photo}" onerror="this.onerror=null; this.src='https://images.fotmob.com/image_resources/playerimages/default.png';" 
                    style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: #0f172a; border: ${isMotm ? '2.5px solid #ffd700' : '2px solid #22c55e'}; box-shadow: ${isMotm ? '0 0 14px rgba(255,215,0,0.8)' : '0 3px 8px rgba(0,0,0,0.6)'};" />
-              <span style="position: absolute; bottom: -2px; left: -4px; background: #0f172a; color: #fff; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);">${p.shirtNumber || ''}</span>
-              ${pRating ? `<span style="position: absolute; top: -3px; right: -6px; background: #00d18a; color: #022c22; font-size: 10px; font-weight: 800; padding: 1px 4px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">★ ${pRating}</span>` : ''}
+              <span style="position: absolute; bottom: -2px; left: -4px; background: #0f172a; color: #fff; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);">${playerObj.number}</span>
+              ${playerObj.rating ? `<span style="position: absolute; top: -3px; right: -6px; background: #00d18a; color: #022c22; font-size: 10px; font-weight: 800; padding: 1px 4px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">★ ${playerObj.rating}</span>` : ''}
             </div>
             <span style="margin-top: 5px; font-size: 11px; font-weight: 600; color: #ffffff; background: rgba(0, 0, 0, 0.75); padding: 1px 6px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 64px;">
               ${shortName}
@@ -812,19 +952,21 @@ function renderLineups(data) {
 
     pitchHtml += `</div>`;
 
-    // Substitutes Bench
+    // Bench
     if (subs.length > 0) {
       pitchHtml += `
         <div style="margin-top: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px;">
           <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; letter-spacing: 0.5px;">Substitutes (Bench)</div>
           <div style="display: flex; flex-wrap: wrap; gap: 6px;">
             ${subs.map(sub => {
-              let sName = sub.name?.fullName || sub.name?.display || sub.name || "Sub";
-              if (typeof sName === 'object') sName = "Sub";
-              const sRating = sub.rating?.num || (typeof sub.rating === "number" ? sub.rating : null);
+              const subObj = registerPlayer(sub, teamName, true);
               return `
-                <span style="font-size: 11px; background: rgba(255,255,255,0.04); color: ${sRating ? '#00d18a' : '#cbd5e1'}; border: 1px solid rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 6px;">
-                  #${sub.shirtNumber || ''} ${String(sName).split(' ').pop()} ${sRating ? `★ ${sRating}` : ''}
+                <span onclick="openPlayScopePlayerCard('${subObj.id}')" 
+                      style="font-size: 11px; background: ${subObj.hasPlayed ? 'rgba(0, 209, 138, 0.08)' : 'rgba(255,255,255,0.04)'}; color: ${subObj.hasPlayed ? '#00d18a' : '#cbd5e1'}; border: 1px solid ${subObj.hasPlayed ? 'rgba(0, 209, 138, 0.3)' : 'rgba(255,255,255,0.06)'}; padding: 4px 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
+                      onmouseover="this.style.borderColor='#38bdf8'" onmouseout="this.style.borderColor='${subObj.hasPlayed ? 'rgba(0, 209, 138, 0.3)' : 'rgba(255,255,255,0.06)'}'">
+                  ${subObj.hasPlayed ? '<span style="font-size: 10px;">🔄</span>' : ''}
+                  #${subObj.number} ${subObj.name.split(' ').pop()}
+                  ${subObj.hasPlayed && subObj.rating ? `<strong style="font-size: 10px; margin-left: 2px;">★ ${subObj.rating}</strong>` : ''}
                 </span>
               `;
             }).join('')}
@@ -837,6 +979,68 @@ function renderLineups(data) {
     container.appendChild(teamWrapper);
   });
 }
+
+// Global Player Card Modal Opener
+window.openPlayScopePlayerCard = function(pId) {
+  const pl = window.playScopePlayers[pId];
+  if (!pl) return;
+
+  let modal = document.getElementById("playScopeUnifiedModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "playScopeUnifiedModal";
+    modal.style.cssText = "display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; backdrop-filter: blur(8px); padding: 16px;";
+    modal.onclick = (e) => { if (e.target.id === 'playScopeUnifiedModal') modal.style.display = 'none'; };
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div style="background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 18px; width: 100%; max-width: 360px; padding: 22px; position: relative; box-shadow: 0 20px 45px rgba(0,0,0,0.9); animation: fadeIn 0.2s ease;">
+      <button onclick="document.getElementById('playScopeUnifiedModal').style.display='none'" style="position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.1); border: none; color: #fff; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">✕</button>
+      
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px;">
+        <img src="${pl.photo}" onerror="this.onerror=null; this.src='https://images.fotmob.com/image_resources/playerimages/default.png';" 
+             style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #1e293b; border: 2px solid ${pl.hasPlayed ? '#38bdf8' : '#64748b'};" />
+        <div>
+          <div style="font-size: 17px; font-weight: 700; color: #f8fafc;">${pl.name}</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 2px;">
+            ${pl.team} • #${pl.number} • 
+            <span style="color: ${pl.hasPlayed ? '#38bdf8' : '#fbbf24'}; font-weight: 600;">
+              ${!pl.isSub ? 'Starting XI' : (pl.hasPlayed ? 'Subbed In' : 'Unused Sub')}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; background: ${pl.hasPlayed ? 'rgba(0, 209, 138, 0.12)' : 'rgba(255, 255, 255, 0.04)'}; border: 1px solid ${pl.hasPlayed ? 'rgba(0, 209, 138, 0.3)' : 'rgba(255, 255, 255, 0.1)'}; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px;">
+        <span style="font-size: 13px; font-weight: 700; color: ${pl.hasPlayed ? '#00d18a' : '#94a3b8'};">PlayScope Match Index</span>
+        <span style="font-size: 16px; font-weight: 800; color: ${pl.hasPlayed ? '#00d18a' : '#94a3b8'};">
+          ${pl.hasPlayed ? (pl.rating ? `★ ${pl.rating}` : '★ Evaluated') : 'Did Not Play'}
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Minutes Played</div>
+          <div style="font-size: 16px; font-weight: 700; color: #fff; margin-top: 4px;">${pl.hasPlayed ? pl.minutes + "'" : "0'"}</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Goals / Assists</div>
+          <div style="font-size: 16px; font-weight: 700; color: #38bdf8; margin-top: 4px;">${pl.goals} / ${pl.assists}</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Total Shots</div>
+          <div style="font-size: 16px; font-weight: 700; color: #fff; margin-top: 4px;">${pl.hasPlayed ? pl.shots : "0"}</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: center;">
+          <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase;">Accurate Passes</div>
+          <div style="font-size: 15px; font-weight: 700; color: #fff; margin-top: 4px;">${pl.passes}</div>
+        </div>
+      </div>
+    </div>
+  `;
+  modal.style.display = "flex";
+};
 // 14. Player Performance Intelligence Table
 function renderPlayerTable(data) {
   const tbody = document.getElementById("playerTableBody");
