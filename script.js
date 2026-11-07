@@ -486,84 +486,132 @@ function renderStatsBars(data) {
 
 // 12. Automated Tactical Debrief by Salman P
 function renderAnalystDebrief(data) {
-  const container = document.getElementById("analystNotesContent");
-  const homeTeam = data.general.homeTeam.name;
-  const awayTeam = data.general.awayTeam.name;
-  const scoreStr = data.header.status.scoreStr || "0 - 0";
-  const potm = data.content.matchFacts?.playerOfTheMatch?.name || "Key Performers";
+  // Current match data save cheyyunnu (Language maattumbol debrief auto-update aavaan)
+  window.currentMatchData = data;
 
-  container.innerHTML = `
-    <div class="debrief-box">
-      <h4>⚡ Momentum & Game State</h4>
-      <p>Decisive high-tempo dominance phases established by <strong>${homeTeam}</strong>. Transition sequences produced consistent progressive passes into the final third.</p>
-    </div>
-    <div class="debrief-box">
-      <h4>🎯 Finishing Quality vs xG</h4>
-      <p>A final score of <strong>${scoreStr}</strong> highlights high spatial conversion inside the penalty box, outperforming baseline chance probabilities.</p>
-    </div>
-    <div class="debrief-box">
-      <h4>🛡️ Tactical Scouting Impact</h4>
-      <p>Standout tactical influence directed through <strong>${potm}</strong>, controlling midfield turnovers and anchoring structured defensive shape.</p>
-    </div>
-  `;
+  const container = document.getElementById("analystDebrief") || 
+                    document.getElementById("debriefContainer") || 
+                    document.querySelector(".debrief-container") || 
+                    document.querySelector("[id*='debrief']");
+  if (!container) return;
+
+  const homeTeam = data.general?.homeTeam?.name || "Home Team";
+  const awayTeam = data.general?.awayTeam?.name || "Away Team";
+  const scoreStr = data.header?.status?.scoreStr || "0 - 0";
+
+  // 1. [object Object] Bug Fix (Real Player Name extract cheyyal)
+  let potm = "Key Midfield Anchor";
+  const rawPotm = data.content?.matchFacts?.playerOfTheMatch;
+  if (rawPotm) {
+    if (typeof rawPotm.name === "string") {
+      potm = rawPotm.name;
+    } else if (rawPotm.name && typeof rawPotm.name === "object") {
+      potm = rawPotm.name.fullName || rawPotm.name.display || "Key Player";
+    } else if (rawPotm.fullName) {
+      potm = rawPotm.fullName;
+    }
+  }
+
+  // 2. Arabic / English Content Check
+  const isArabic = (typeof currentLanguage !== 'undefined' && currentLanguage === 'ar');
+
+  if (isArabic) {
+    container.innerHTML = `
+      <div class="debrief-box">
+        <h4>⚡ الزخم وحالة المباراة</h4>
+        <p>مراحل سيطرة إيقاعية عالية أظهرها فريق <strong>${homeTeam}</strong>. أثمرت سلاسل التحول السريع عن تمريرات تصاعدية متواصلة نحو الثلث الهجومي الأخير.</p>
+      </div>
+      <div class="debrief-box">
+        <h4>🎯 كفاءة إنهاء الفرص مقارنة بالأهداف المتوقعة (xG)</h4>
+        <p>النتيجة النهائية <strong>${scoreStr}</strong> تعكس دقة تحويل عالية للمحاولات داخل منطقة الجزاء مع تجاوز معدلات التهديف المتوقعة.</p>
+      </div>
+      <div class="debrief-box">
+        <h4>🛡️ التأثير التكتيكي البارز</h4>
+        <p>تم توجيه التأثير التكتيكي البارز عبر تحركات اللاعب <strong>${potm}</strong>، بالسيطرة على استرجاع الكرة في وسط الملعب والحفاظ على تمركز دفاعي منضبط.</p>
+      </div>
+    `;
+  } else {
+    container.innerHTML = `
+      <div class="debrief-box">
+        <h4>⚡ Momentum & Game State</h4>
+        <p>Decisive high-tempo dominance phases established by <strong>${homeTeam}</strong>. Transition sequences produced consistent progressive passes into the final third.</p>
+      </div>
+      <div class="debrief-box">
+        <h4>🎯 Finishing Quality vs xG</h4>
+        <p>A final score of <strong>${scoreStr}</strong> highlights high spatial conversion inside the penalty box, outperforming baseline chance probabilities.</p>
+      </div>
+      <div class="debrief-box">
+        <h4>🛡️ Tactical Scouting Impact</h4>
+        <p>Standout tactical influence directed through <strong>${potm}</strong>, controlling midfield turnovers and anchoring structured defensive shape.</p>
+      </div>
+    `;
+  }
 }
 
-// 13. Official Starting Lineups & Formations (Al Ahli Style)
+// Language switch cheyyumbol debrief re-render aavaanulla connection
+window.updateDebriefText = function(data) {
+  renderAnalystDebrief(data);
+};
 function renderLineups(data) {
   const container = document.getElementById("lineupsContainer");
   const badgesContainer = document.getElementById("formationBadges");
-  container.innerHTML = "";
-  badgesContainer.innerHTML = "";
+  if (!container) return;
 
-  const lineups = data.content.lineup?.lineup || [];
-  if (lineups.length < 2) {
-    container.innerHTML = `<div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 2rem;">Lineup telemetry not provided in this match file.</div>`;
+  container.innerHTML = "";
+  if (badgesContainer) badgesContainer.innerHTML = "";
+
+  const lineupData = data.content?.lineup;
+  if (!lineupData) {
+    container.innerHTML = '<div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 2rem;">Lineup telemetry not provided in this match file</div>';
     return;
   }
 
-  const homeLineup = lineups[0];
-  const awayLineup = lineups[1];
-
-  badgesContainer.innerHTML = `
-    <span class="formation-tag">${homeLineup.teamName}: ${homeLineup.formation || '4-2-3-1'}</span>
-    <span class="formation-tag">${awayLineup.teamName}: ${awayLineup.formation || '4-3-3'}</span>
-  `;
-
-  function buildTeamCol(teamData) {
-    const col = document.createElement("div");
-    col.className = "team-lineup-col";
-
-    let playersHtml = "";
-    const players = teamData.starting || (Array.isArray(teamData.players) ? teamData.players.flat() : []);
-
-    players.forEach(p => {
-      const rating = p.performance?.rating || p.rating || "—";
-      const isHigh = rating !== "—" && Number(rating) >= 7.5;
-      const shirt = p.shirt || p.jerseyNumber || "-";
-
-      playersHtml += `
-        <div class="lineup-player-row">
-          <div class="p-left">
-            <span class="jersey-num">#${shirt}</span>
-            <span class="player-name-text">${p.name}</span>
-          </div>
-          <span class="p-rating-tag ${isHigh ? 'rating-high' : 'rating-mid'}">${rating}</span>
-        </div>
-      `;
-    });
-
-    col.innerHTML = `
-      <div class="lineup-team-title">
-        <span>${teamData.teamName}</span>
-        <span style="font-size: 0.8rem; color: var(--accent-green); font-weight: 700;">Starting XI</span>
-      </div>
-      <div class="lineup-players-list">${playersHtml}</div>
-    `;
-    return col;
+  // FotMob API-le ella standard format-um check cheyyunnu
+  let teams = [];
+  if (Array.isArray(lineupData.lineup) && lineupData.lineup.length >= 2) {
+    teams = lineupData.lineup;
+  } else if (lineupData.homeTeam && lineupData.awayTeam) {
+    teams = [lineupData.homeTeam, lineupData.awayTeam];
+  } else if (Array.isArray(lineupData.teams) && lineupData.teams.length >= 2) {
+    teams = lineupData.teams;
   }
 
-  container.appendChild(buildTeamCol(homeLineup));
-  container.appendChild(buildTeamCol(awayLineup));
+  if (teams.length < 2) {
+    container.innerHTML = '<div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 2rem;">Lineup telemetry not provided in this match file</div>';
+    return;
+  }
+
+  // Lineup rendering
+  teams.forEach((team, idx) => {
+    const teamName = idx === 0 ? (data.general?.homeTeam?.name || "Home") : (data.general?.awayTeam?.name || "Away");
+    const formation = team.formation || "4-3-3";
+
+    if (badgesContainer) {
+      badgesContainer.innerHTML += `<span class="badge" style="margin-right: 8px;">${teamName}: ${formation}</span>`;
+    }
+
+    const players = team.players || team.starters || [];
+    const flattenedPlayers = Array.isArray(players[0]) ? players.flat() : players;
+
+    const teamCol = document.createElement("div");
+    teamCol.className = "lineup-team-card";
+    teamCol.innerHTML = `
+      <div style="font-weight: 700; margin-bottom: 12px; color: var(--accent-blue);">${teamName} XI (${formation})</div>
+      <div class="players-list" style="display: flex; flex-direction: column; gap: 8px;">
+        ${flattenedPlayers.slice(0, 11).map(p => {
+          const pName = p.name?.fullName || p.name?.display || p.name || p.fullName || "Player";
+          const pRating = p.rating?.num || (typeof p.rating === "number" ? p.rating : null);
+          return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 13px;">
+              <span><strong>${p.shirtNumber || ''}</strong> ${pName}</span>
+              ${pRating ? `<span style="background: rgba(0, 209, 138, 0.15); color: #00d18a; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px;">★ ${pRating}</span>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+    container.appendChild(teamCol);
+  });
 }
 
 // 14. Player Performance Intelligence Table
@@ -648,21 +696,27 @@ function initSearchAutocomplete() {
 // 16. Multilingual Toggle
 function switchLanguage(lang) {
   currentLanguage = lang;
-  document.getElementById("btnEn").classList.toggle("active", lang === "en");
-  document.getElementById("btnAr").classList.toggle("active", lang === "ar");
+  
+  // Button active toggle
+  const btnEn = document.getElementById("btnEn");
+  const btnAr = document.getElementById("btnAr");
+  if (btnEn) btnEn.classList.toggle("active", lang === "en");
+  if (btnAr) btnAr.classList.toggle("active", lang === "ar");
 
-  if (lang === "ar") {
-    document.body.classList.add("rtl-mode");
-    document.documentElement.setAttribute("dir", "rtl");
-  } else {
-    document.body.classList.remove("rtl-mode");
-    document.documentElement.setAttribute("dir", "ltr");
-  }
+  // Screen thirinju pokathirikkan dir eppozhum ltr aayi vekkunnu (No layout flip)
+  document.documentElement.setAttribute("dir", "ltr");
+  document.body.classList.remove("rtl-mode");
 
+  // Ella texts-um Arabic / English aayi maattaan
   document.querySelectorAll("[data-i18n]").forEach(el => {
     const key = el.getAttribute("data-i18n");
-    if (i18n[lang][key]) {
+    if (typeof i18n !== 'undefined' && i18n[lang] && i18n[lang][key]) {
       el.innerText = i18n[lang][key];
     }
   });
+
+  // Open aaya match undenkil debrief-inte language koodi maattaan
+  if (window.currentMatchData && typeof updateDebriefText === 'function') {
+    updateDebriefText(window.currentMatchData, lang);
+  }
 }
